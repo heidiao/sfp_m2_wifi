@@ -1,0 +1,28 @@
+From 013ff68dd1b6358fa0b79cc240f1629ab0200e0a Mon Sep 17 00:00:00 2001
+From: Benzi Zbit <benzi.zbit@intel.com>
+Date: Sun, 7 Dec 2014 18:53:37 +0200
+Subject: [PATCH] iwlwifi: add wlan0 as the global interface
+
+Change-Id: I066ca309416ee504bc937b88eb974f3090b9ea09
+Signed-off-by: Benzi Zbit <benzi.zbit@intel.com>
+Reviewed-on: https://android.intel.com/309023
+Reviewed-by: Breana, Tiberiu A <tiberiu.a.breana@intel.com>
+Tested-by: Breana, Tiberiu A <tiberiu.a.breana@intel.com>
+---
+ wlan/iwlwifi/load_iwlwifi.sh |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git device/intel/common/wlan/iwlwifi/load_iwlwifi.sh device/intel/common/wlan/iwlwifi/load_iwlwifi.sh
+index a1a6bfb..191d33d 100644
+--- device/intel/common/wlan/iwlwifi/load_iwlwifi.sh
++++ device/intel/common/wlan/iwlwifi/load_iwlwifi.sh
+@@ -13,3 +13,6 @@ else
+         setprop wlan.driver.status "ok"
+ 
+ fi
++
++# make sure that the WiFi HAL is using wlan0 as the global interface
++setprop wifi.interface wlan0
+-- 
+1.7.9.5
+

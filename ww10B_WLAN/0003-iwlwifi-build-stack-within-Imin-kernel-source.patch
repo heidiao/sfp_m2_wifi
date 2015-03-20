@@ -1,0 +1,149 @@
+From 8e48b4591efec2eec36b75a33e15a6bfe4d838d0 Mon Sep 17 00:00:00 2001
+From: "Chung, Kevin" <kevin.chung@intel.com>
+Date: Tue, 10 Feb 2015 18:26:14 +0800
+Subject: [PATCH 3/4] iwlwifi: build stack within Imin kernel source
+
+Modify Makefiles to align with Imin kernel source build.
+Change variables vales, change targets recipes and add it as
+dependency to kernel
+
+Change-Id: I031460c726fd1e204656d3fac0f6fdbb587b2d36
+Signed-off-by: Jonathan DE CESCO <jonathan.de.cesco@intel.com>
+Signed-off-by: Chung, Kevin <kevin.chung@intel.com>
+---
+ uefi/modules/wlan/iwlwifi/Android.mk               |   32 ++++++++++++++------
+ uefi/modules/wlan/iwlwifi/Androidiwlwifi.mk        |   21 ++-----------
+ .../modules/wlan/iwlwifi/defconfigs/iwlwifi-public |    6 +++-
+ .../wlan/iwlwifi/defconfigs/iwlwifi-public-android |    4 +--
+ 4 files changed, 31 insertions(+), 32 deletions(-)
+
+diff --git kernel/gmin/uefi/modules/wlan/iwlwifi/Android.mk kernel/gmin/uefi/modules/wlan/iwlwifi/Android.mk
+index 52c4d8e..7c1b2b9 100644
+--- kernel/gmin/uefi/modules/wlan/iwlwifi/Android.mk
++++ kernel/gmin/uefi/modules/wlan/iwlwifi/Android.mk
+@@ -16,11 +16,19 @@ ifeq ($(INTEL_COMPAT_INTEGRATED_BUILD),)
+ 
+ # Run only this build if variant define the needed configuration
+ # e.g. Enabling iwlwifi for XMM6321
+-# BOARD_USING_INTEL_IWL := true      - this will enable iwlwifi building
+-# INTEL_IWL_BOARD_CONFIG := xmm6321  - the configuration, defconfig-xmm6321
+-# INTEL_IWL_USE_COMPAT_INSTALL := y  - this will use kernel modules installation
+-# INTEL_IWL_COMPAT_INSTALL_DIR := updates - the folder that the modules will be installed in
+-# INTEL_IWL_COMPAT_INSTALL_PATH ?= $(ANDROID_BUILD_TOP)/$(TARGET_OUT) - the install path for the modules
++#BOARD_USING_INTEL_IWL := true      - this will enable iwlwifi building
++#INTEL_IWL_BOARD_CONFIG := xmm6321  - the configuration, defconfig-xmm6321
++INTEL_IWL_BOARD_CONFIG := iwlwifi-public-android
++#INTEL_IWL_USE_COMPAT_INSTALL := y  - this will use kernel modules installation
++INTEL_IWL_USE_COMPAT_INSTALL := y
++#INTEL_IWL_COMPAT_INSTALL_DIR := updates - the folder that the modules will be installed in
++INTEL_IWL_COMPAT_INSTALL_DIR := updates
++#INTEL_IWL_COMPAT_INSTALL_PATH ?= $(ANDROID_BUILD_TOP)/$(TARGET_OUT) - the install path for the modules
++INTEL_IWL_COMPAT_INSTALL_PATH ?= $(ANDROID_BUILD_TOP)/$(KERNEL_OUT_MODINSTALL)
++TARGET_TOOLS := /opt/poky/1.6/sysroots/x86_64-pokysdk-linux/usr/bin/x86_64-poky-linux
++CUSTOM_CROSS_COMPILE = $(TARGET_TOOLS)/x86_64-poky-linux-
++
++
+ ifeq ($(BOARD_USING_INTEL_IWL),true)
+ 
+ .PHONY: iwlwifi
+@@ -102,6 +110,7 @@ else
+ KERNEL_OUT_ABS_DIR := $(ANDROID_BUILD_TOP)/$(KERNEL_OUT_DIR)
+ endif
+ 
++.PHONY: iwlwifi
+ iwlwifi: iwlwifi_build $(INTEL_IWL_COMPAT_INSTALL) $(INTEL_IWL_MOD_DEP)
+ 
+ $(INTEL_IWL_OUT_DIR): $(INTEL_IWL_SRC_DIR)
+@@ -112,15 +121,18 @@ $(INTEL_IWL_OUT_DIR): $(INTEL_IWL_SRC_DIR)
+ 
+ $(IWLWIFI_CONFIGURE): $(INTEL_IWL_KERNEL_DEPEND) | $(INTEL_IWL_OUT_DIR)
+ 	@echo Configuring kernel module iwlwifi with defconfig-$(INTEL_IWL_BOARD_CONFIG)
+-	@$(MAKE) -C $(INTEL_IWL_OUT_DIR)/ ARCH=$(TARGET_ARCH) $(CROSS_COMPILE) KLIB_BUILD=$(KERNEL_OUT_ABS_DIR) defconfig-$(INTEL_IWL_BOARD_CONFIG)
++	$(MAKE) -C $(INTEL_IWL_OUT_DIR)/ ARCH=x86_64 KLIB_BUILD=$(KERNEL_OUT_ABS_DIR) defconfig-$(INTEL_IWL_BOARD_CONFIG)
+ 
+-iwlwifi_build: $(IWLWIFI_CONFIGURE)
+-	@$(info Building kernel module iwlwifi in $(INTEL_IWL_OUT_DIR))
+-	@$(MAKE) -C $(INTEL_IWL_OUT_DIR)/ ARCH=$(TARGET_ARCH) $(CROSS_COMPILE) KLIB_BUILD=$(KERNEL_OUT_ABS_DIR)
++iwlwifi_build: $(PRODUCT_OUT)/kernel
++	@$(info Cleaning and building kernel module iwlwifi in $(INTEL_IWL_OUT_DIR))
++	rm -rf $(INTEL_IWL_OUT_DIR)
++	@mkdir -p $(INTEL_IWL_OUT_DIR)
++	@cp -rfl $(INTEL_IWL_SRC_DIR)/. $(INTEL_IWL_OUT_DIR)/
++	$(MAKE) -C $(INTEL_IWL_OUT_DIR)/ ARCH=x86_64 INSTALL_MOD_PATH=$(INTEL_IWL_COMPAT_INSTALL_PATH) CROSS_COMPILE=$(CUSTOM_CROSS_COMPILE) KLIB_BUILD=$(KERNEL_OUT_ABS_DIR) modules
+ 
+ iwlwifi_install: iwlwifi_build $(INTEL_IWL_RM_MAC_CFG_DEPEND)
+ 	@$(info Installing kernel modules in $(INTEL_IWL_COMPAT_INSTALL_PATH))
+-	@$(MAKE) -C $(KERNEL_OUT_ABS_DIR) M=$(INTEL_IWL_OUT_DIR)/ INSTALL_MOD_DIR=$(INTEL_IWL_COMPAT_INSTALL_DIR) INSTALL_MOD_PATH=$(INTEL_IWL_COMPAT_INSTALL_PATH) $(INTEL_IWL_INSTALL_MOD_STRIP) modules_install
++	$(MAKE) -C $(KERNEL_OUT_ABS_DIR) M=$(INTEL_IWL_OUT_DIR)/ INSTALL_MOD_PATH=$(INTEL_IWL_COMPAT_INSTALL_PATH) $(INTEL_IWL_INSTALL_MOD_STRIP) modules_install
+ 
+ iwlwifi_rm_mac_cfg: iwlwifi_build
+ 	$(info Remove kernel cfg80211.ko and mac80211.ko)
+diff --git kernel/gmin/uefi/modules/wlan/iwlwifi/Androidiwlwifi.mk kernel/gmin/uefi/modules/wlan/iwlwifi/Androidiwlwifi.mk
+index 92ad5b8..b6e461f 100644
+--- kernel/gmin/uefi/modules/wlan/iwlwifi/Androidiwlwifi.mk
++++ kernel/gmin/uefi/modules/wlan/iwlwifi/Androidiwlwifi.mk
+@@ -1,20 +1,3 @@
+-# This makefile is included from vendor/intel/common/wifi/WifiRules.mk.
+-.PHONY: iwlwifi
+-INTEL_IWL_SRC_DIR := $(call my-dir)
+-INTEL_IWL_OUT_DIR := $(KERNEL_OUT_DIR)/../../$(INTEL_IWL_SRC_DIR)
+-
+-iwlwifi: build_bzImage
+-	@echo Building kernel module iwlwifi in $(INTEL_IWL_OUT_DIR)
+-	@mkdir -p $(INTEL_IWL_OUT_DIR)
+-	@cp -rfl $(INTEL_IWL_SRC_DIR)/. $(INTEL_IWL_OUT_DIR)/
+-	@+$(KERNEL_BLD_ENV) $(MAKE) -C $(ANDROID_BUILD_TOP)/$(INTEL_IWL_OUT_DIR) ARCH=$(TARGET_ARCH) $(KERNEL_EXTRA_FLAGS) KLIB_BUILD=$(ANDROID_BUILD_TOP)/$(KERNEL_OUT_DIR) defconfig-xmm6321
+-	@+$(KERNEL_BLD_ENV) $(MAKE) -C $(ANDROID_BUILD_TOP)/$(INTEL_IWL_OUT_DIR) ARCH=$(TARGET_ARCH) $(KERNEL_EXTRA_FLAGS) KLIB_BUILD=$(ANDROID_BUILD_TOP)/$(KERNEL_OUT_DIR)
+-
+-iwlwifi_clean:
+-	@echo Cleaning kernel module iwlwifi in $(INTEL_IWL_OUT_DIR)
+-	@rm -rf $(INTEL_IWL_OUT_DIR)
+-
+-copy_modules_to_root: iwlwifi
+-
+-ALL_KERNEL_MODULES += $(INTEL_IWL_OUT_DIR)
++# This makefile is included from mixins groups device/intel/mixins/groups/wlan/iwlwifi
+ 
++kernel: iwlwifi iwlwifi_install
+diff --git kernel/gmin/uefi/modules/wlan/iwlwifi/defconfigs/iwlwifi-public kernel/gmin/uefi/modules/wlan/iwlwifi/defconfigs/iwlwifi-public
+index d791d24..cc77820 100644
+--- kernel/gmin/uefi/modules/wlan/iwlwifi/defconfigs/iwlwifi-public
++++ kernel/gmin/uefi/modules/wlan/iwlwifi/defconfigs/iwlwifi-public
+@@ -5,6 +5,7 @@ CPTCFG_CFG80211_CERTIFICATION_ONUS=y
+ CPTCFG_CFG80211_REG_RELAX_NO_IR=y
+ CPTCFG_NL80211_TESTMODE=y
+ CPTCFG_MAC80211=m
++# CPTCFG_MAC80211_RC_PID is not set
+ CPTCFG_MAC80211_RC_MINSTREL=y
+ CPTCFG_MAC80211_RC_DEFAULT_MINSTREL=y
+ CPTCFG_MAC80211_DEBUGFS=y
+@@ -16,7 +17,10 @@ CPTCFG_IWLWIFI_DEBUG=y
+ CPTCFG_IWLWIFI_DEBUGFS=y
+ CPTCFG_IWLWIFI_DEVICE_TRACING=y
+ CPTCFG_IWLWIFI_DEVICE_TESTMODE=y
++# CPTCFG_MAC80211_HWSIM is not set
+ CPTCFG_IWLWIFI_PCIE=y
+ CPTCFG_IWLXVT=m
+-CPTCFG_IWLWIFI_SDIO=y
++# CPTCFG_IWLWIFI_SDIO is not set
+ CPTCFG_IWLWIFI_OPMODE_MODULAR=y
++CPTCFG_CFG80211_ANDROID_P2P_HACK=y
++CPTCFG_IWLWIFI_BCAST_FILTERING=y
+diff --git kernel/gmin/uefi/modules/wlan/iwlwifi/defconfigs/iwlwifi-public-android kernel/gmin/uefi/modules/wlan/iwlwifi/defconfigs/iwlwifi-public-android
+index 6478cac..cc77820 100644
+--- kernel/gmin/uefi/modules/wlan/iwlwifi/defconfigs/iwlwifi-public-android
++++ kernel/gmin/uefi/modules/wlan/iwlwifi/defconfigs/iwlwifi-public-android
+@@ -19,8 +19,8 @@ CPTCFG_IWLWIFI_DEVICE_TRACING=y
+ CPTCFG_IWLWIFI_DEVICE_TESTMODE=y
+ # CPTCFG_MAC80211_HWSIM is not set
+ CPTCFG_IWLWIFI_PCIE=y
+-# CPTCFG_IWLXVT is not set
+-CPTCFG_IWLWIFI_SDIO=y
++CPTCFG_IWLXVT=m
++# CPTCFG_IWLWIFI_SDIO is not set
+ CPTCFG_IWLWIFI_OPMODE_MODULAR=y
+ CPTCFG_CFG80211_ANDROID_P2P_HACK=y
+ CPTCFG_IWLWIFI_BCAST_FILTERING=y
+-- 
+1.7.9.5
+

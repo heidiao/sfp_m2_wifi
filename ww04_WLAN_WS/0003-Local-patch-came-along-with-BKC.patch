@@ -1,0 +1,41 @@
+From a1b422c1a1f283a40690d87609b4d41db11f7740 Mon Sep 17 00:00:00 2001
+From: "Chung, Kevin" <kevin.chung@intel.com>
+Date: Tue, 10 Feb 2015 19:54:42 +0800
+Subject: [PATCH 3/3] Local patch came along with BKC. Signed-off-by: Chung,
+ Kevin <kevin.chung@intel.com>
+
+Change-Id: I293517b30f89e42304dced8e2fbf0cd4c074b50d
+---
+ wlan/iwlwifi/load_iwlwifi.sh |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git device/intel/common/wlan/iwlwifi/load_iwlwifi.sh device/intel/common/wlan/iwlwifi/load_iwlwifi.sh
+index 191d33d..b64fd39 100644
+--- device/intel/common/wlan/iwlwifi/load_iwlwifi.sh
++++ device/intel/common/wlan/iwlwifi/load_iwlwifi.sh
+@@ -1,16 +1,16 @@
+ 
+-insmod system/lib/modules/compat.ko
+-insmod system/lib/modules/iwl-cfg80211.ko
+-insmod system/lib/modules/iwl-mac80211.ko
++#insmod system/lib/modules/compat.ko
++#insmod system/lib/modules/iwl-cfg80211.ko
++#insmod system/lib/modules/iwl-mac80211.ko
+ 
+ if [ $1 == "--ptest-boot" ]; then
+         insmod system/lib/modules/iwlwifi.ko nvm_file=nvmData xvt_default_mode=1
+         insmod system/lib/modules/iwlxvt.ko
+ else
+-        insmod system/lib/modules/iwlwifi.ko nvm_file=nvmData d0i3_debug=1
+-        insmod system/lib/modules/iwlmvm.ko power_scheme=1
++#        insmod system/lib/modules/iwlwifi.ko nvm_file=nvmData d0i3_debug=1
++#        insmod system/lib/modules/iwlmvm.ko power_scheme=1
+         # set driver wifi driver property so hal will know that it is loaded
+-        setprop wlan.driver.status "ok"
++#        setprop wlan.driver.status "ok"
+ 
+ fi
+ 
+-- 
+1.7.9.5
+

@@ -1,0 +1,28 @@
+From 658f52b649813bae45483984168c8934a97717cc Mon Sep 17 00:00:00 2001
+From: Jonathan DE CESCO <jonathan.de.cesco@intel.com>
+Date: Fri, 9 Jan 2015 11:13:24 +0100
+Subject: [PATCH 10/10] Push Sfp and LnP NVRAM to the target FS
+
+Change-Id: I0cfae55f0026588e95592855933a1575f323ac37
+Signed-off-by: Jonathan DE CESCO <jonathan.de.cesco@intel.com>
+---
+ iwl-fw-8000-cht-gmin.mk |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git vendor/intel/fw/iwl/iwl-fw-8000-cht-gmin.mk vendor/intel/fw/iwl/iwl-fw-8000-cht-gmin.mk
+index 7a93142..f46a220 100644
+--- vendor/intel/fw/iwl/iwl-fw-8000-cht-gmin.mk
++++ vendor/intel/fw/iwl/iwl-fw-8000-cht-gmin.mk
+@@ -7,7 +7,8 @@ IWL_UCODE_FILES := $(notdir $(wildcard $(LOCAL_IWL_FW_DIR)/*8000*.ucode))
+ #copy the nvmData file and all the ucode files to $(TARGET_OUT_WLAN_FW)
+ # copying nvm to firmware is temporary
+ PRODUCT_COPY_FILES := \
+-       $(LOCAL_IWL_FW_DIR)/nvmData-8000:$(TARGET_OUT_WLAN_FW)/nvmData \
++       $(LOCAL_IWL_FW_DIR)/nvmData-8000B:$(TARGET_OUT_WLAN_FW)/nvmData \
++       $(LOCAL_IWL_FW_DIR)/nvmData-8000:$(TARGET_OUT_WLAN_FW)/nvmDataSfP \
+        $(LOCAL_IWL_FW_DIR)/nvmData-8000-source:$(TARGET_OUT_ETC_WIFI)/nvmDataDefault \
+        $(LOCAL_IWL_FW_DIR)/fw_info.txt:$(TARGET_OUT_WLAN_FW)/fw_info.txt \
+        $(foreach ucode,$(IWL_UCODE_FILES),\
+-- 
+1.7.9.5
+
