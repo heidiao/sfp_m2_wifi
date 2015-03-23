@@ -1,0 +1,10 @@
+SYMLINKS := $(addprefix $(TARGET_OUT_WLAN_FW),$(NVM_TARGET_FILENAME))
+$(SYMLINKS): $(LOCAL_INSTALLED_MODULE) $(LOCAL_PATH)/Android.mk
+	@echo "Symlink: $@"
+	@mkdir -p $(dir $@)
+	@rm -rf $@
+	$(hide) ln -sf $(addprefix $(NVM_TARGET_PATH),$(NVM_TARGET_FILENAME)) $@
+
+ALL_DEFAULT_INSTALLED_MODULES += $(SYMLINKS)
+ALL_MODULES.$(LOCAL_MODULE).INSTALLED := \
+	$(ALL_MODULES.$(LOCAL_MODULE).INSTALLED) $(SYMLINKS)
